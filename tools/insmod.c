@@ -16,10 +16,17 @@
 
 #include "kmod.h"
 
+enum {
+	CMDOPTS_FORCE_VERMAGIC = 301,
+	CMDOPTS_FORCE_MODVERSION,
+};
+
 static const char cmdopts_s[] = "fsvVh";
 static const struct option cmdopts[] = {
 	// clang-format off
 	{ "force", no_argument, 0, 'f' },
+	{ "force-vermagic", no_argument, 0, CMDOPTS_FORCE_VERMAGIC },
+	{ "force-modversion", no_argument, 0, CMDOPTS_FORCE_MODVERSION },
 	{ "syslog", no_argument, 0, 's' },
 	{ "verbose", no_argument, 0, 'v' },
 	{ "version", no_argument, 0, 'V' },
@@ -33,12 +40,16 @@ static void help(void)
 	printf("Usage:\n"
 	       "\t%s [options] filename [module options]\n"
 	       "Options:\n"
-	       "\t-f, --force       DANGEROUS: forces a module load, may cause\n"
-	       "\t                  data corruption and crash your machine\n"
-	       "\t-s, --syslog      print to syslog, not stderr\n"
-	       "\t-v, --verbose     enables more messages\n"
-	       "\t-V, --version     show version\n"
-	       "\t-h, --help        show this help\n",
+	       "\t-f, --force              DANGEROUS: forces a module load, may cause\n"
+	       "\t                         data corruption and crash your machine.\n"
+	       "\t                         implies --force-modversion and\n"
+	       "\t                         --force-vermagic\n"
+	       "\t    --force-modversion   Ignore module's version\n"
+	       "\t    --force-vermagic     Ignore module's version magic\n"
+	       "\t-s, --syslog             print to syslog, not stderr\n"
+	       "\t-v, --verbose            enables more messages\n"
+	       "\t-V, --version            show version\n"
+	       "\t-h, --help               show this help\n",
 	       program_invocation_short_name);
 }
 
@@ -75,6 +86,12 @@ static int do_insmod(int argc, char *argv[])
 		case 'f':
 			flags |= KMOD_PROBE_FORCE_MODVERSION;
 			flags |= KMOD_PROBE_FORCE_VERMAGIC;
+			break;
+		case CMDOPTS_FORCE_VERMAGIC:
+			flags |= KMOD_PROBE_FORCE_VERMAGIC;
+			break;
+		case CMDOPTS_FORCE_MODVERSION:
+			flags |= KMOD_PROBE_FORCE_MODVERSION;
 			break;
 		case 's':
 			use_syslog = true;
